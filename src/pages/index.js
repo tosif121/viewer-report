@@ -1,118 +1,206 @@
-import Image from "next/image";
-import { Inter } from "next/font/google";
+import React, { useEffect, useState } from 'react';
+import { Editor } from '@tinymce/tinymce-react';
+import moment from 'moment';
+import { getDataFromServer, postDatatoServer } from '@/components/services';
+import { useRouter } from 'next/router';
 
-const inter = Inter({ subsets: ["latin"] });
+export default function App() {
+  const [pageContent, setPageContent] = useState(null);
+  const [tableData, setTableData] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const router = useRouter();
+  const path = router.asPath.replace(/^\/#/, '');
+  const [reports, setReports] = useState([]);
 
-export default function Home() {
+  useEffect(() => {
+    function handleResponse(responseData) {
+      if (responseData.status === 'success') {
+        setReports(responseData.response);
+      }
+    }
+
+    const endpoint = 'templates';
+    const params = {
+      token: '',
+    };
+    const props = {};
+
+    getDataFromServer({
+      end_point: endpoint,
+      params,
+      call_back: handleResponse,
+      props,
+    });
+  }, []);
+
+  useEffect(() => {
+    function handleResponse(responseData) {
+      if (responseData.status === 'success') {
+        setTableData(responseData.response[0]);
+      } else {
+        console.error('Error:', responseData.error);
+      }
+    }
+    const endpoint = 'StudyID';
+    const requestBody = {
+      StudyInstanceUID: path,
+    };
+
+    const props = {
+      header: true,
+    };
+
+    postDatatoServer({
+      end_point: endpoint,
+      body: requestBody,
+      call_back: handleResponse,
+      props,
+    });
+  }, []);
+
+  const formattedDate = moment(tableData?.Date, 'D/M/YYYY, h:mm:ss a').format('DD-MMMM-YYYY');
+
+  useEffect(() => {
+    if (selectedItem) {
+      const selectedReport = reports.find((report) => report.templateID === parseInt(selectedItem));
+
+      if (selectedReport) {
+        const initialText = `
+        ${selectedReport.name} <br/>
+        <br/>STUDY_PROTOCOL: ${
+          selectedReport.content.STUDY_PROTOCOL ? selectedReport.content.STUDY_PROTOCOL.replace(/\n/g, '<br/>') : ''
+        } <br/>
+        <br/>
+        OBSERVATION:
+        ${selectedReport.content.OBSERVATION.replace(/\n/g, '<br/>')}
+        <br/> <br/>IMPRESSION:<br/>
+        ${selectedReport.content.IMPRESSION.replace(/\n/g, '<br/>')}
+      `;
+
+        setPageContent(initialText);
+      }
+    }
+  }, [selectedItem, reports]);
+
+  const handleChange = (e) => {
+    setSelectedItem(e.target.value);
+  };
+
   return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
-    >
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/pages/index.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
+    <div className="p-3">
+      <table className="min-w-full border text-center text-sm font-light text-dark mb-3">
+        <thead className="border-b font-medium">
+          <tr>
+            <th scope="col" className="border-r">
+              Patient ID
+            </th>
+            <th scope="col" className="border-r">
+              Patient Name
+            </th>
+            <th scope="col" className="border-r">
+              Date
+            </th>
+            <th scope="col" className="border-r">
+              Study
+            </th>
+            {/* <th
+              scope="col"
+              className="border-r"
+            >
+              Ref Doctor
+            </th> */}
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="border-b font-medium">
+            <td className="border-r">{tableData?.patientID}</td>
+            <td className="border-r">{tableData?.name}</td>
+            <td className="border-r">{formattedDate}</td>
+            <td className="border-r">{tableData?.study}</td>
+            {/* <td className="border-r">{tableData.ReferringPhysicianName}</td> */}
+          </tr>
+        </tbody>
+        <thead className="border-b font-medium">
+          <tr>
+            <th scope="col" className="border-r">
+              Gender
+            </th>
+            <th scope="col" className="border-r">
+              Modality
+            </th>
+            <th scope="col" className="border-r">
+              Age
+            </th>
+            <th scope="col" className="border-r">
+              Ref Doctor
+            </th>
+            {/* <th
+              scope="col"
+              className="border-r"
+            >
+              Ref Doctor
+            </th> */}
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="border-b font-medium">
+            <td className="border-r">{tableData?.PatientSex}</td>
+            <td className="border-r">{tableData?.modality}</td>
+            <td className="border-r">{tableData?.PatientAge}</td>
+            <td className="border-r">{tableData?.ReferringPhysicianName}</td>
+            {/* <td className="border-r">{tableData.ReferringPhysicianName}</td> */}
+          </tr>
+        </tbody>
+      </table>
+      <div className="mb-3">
+        <label for="report" className="text-dark me-2">
+          Select Report:
+        </label>
+        <select
+          className="border cursor-pointer p-1 focus-visible:outline-0"
+          id="report"
+          value={selectedItem}
+          onChange={handleChange}
+        >
+          <option value="">Select a report</option>
+          {reports.map((report, key) => (
+            <option key={key} value={report.templateID}>
+              {report.Heading}
+            </option>
+          ))}
+        </select>
       </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700/10 after:dark:from-sky-900 after:dark:via-[#0141ff]/40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Discover and deploy boilerplate example Next.js&nbsp;projects.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      <Editor
+        apiKey="pbn0qqswn3is37mobq3zhkjf5squog65la49wi7rtqaoe1nv"
+        onChange={(value) => setPageContent(value)}
+        initialValue={pageContent}
+        init={{
+          menubar: false,
+          height: 500,
+          plugins: [
+            'advlist',
+            'autolink',
+            'lists',
+            'link',
+            'image',
+            'charmap',
+            'preview',
+            'anchor',
+            'searchreplace',
+            'visualblocks',
+            'code',
+            'fullscreen',
+            'insertdatetime',
+            'media',
+            'table',
+            'code',
+            'help',
+            'wordcount',
+          ],
+          toolbar:
+            'undo redo | styles | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist',
+        }}
+      />
+    </div>
   );
 }
