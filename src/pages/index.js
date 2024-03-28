@@ -13,9 +13,8 @@ export default function App() {
   const router = useRouter();
   const path = router.asPath.replace(/^\/#/, '');
   const [reports, setReports] = useState([]);
-  const url = window.location.href;
-  const urlParams = new URLSearchParams(url.split('?')[1]);
-  const User = urlParams.get('UserName');
+  // const urlParams = new URLSearchParams(url.split('?')[1]);
+  const User = "Shiv";
 
   useEffect(() => {
     function handleResponse(responseData) {
