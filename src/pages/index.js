@@ -134,84 +134,97 @@ ${tableData?.mlcdrName?.compony}`
 MD (Radio-Diagnosis)
 ${tableData?.drName?.compony}`;
 
+const table = ` <table className="text-dark mb-3 min-w-full whitespace-nowrap border text-center text-sm font-light">
+<thead className="border-b font-medium">
+  <tr>
+    <th
+      scope="col"
+      className="border-r"
+    >
+      Patient ID
+    </th>
+    <th
+      scope="col"
+      className="border-r"
+    >
+      Patient Name
+    </th>
+    <th
+      scope="col"
+      className="border-r"
+    >
+      Date
+    </th>
+    <th
+      scope="col"
+      className="border-r"
+    >
+      Study
+    </th>
+  </tr>
+</thead>
+<tbody>
+  <tr className="border-b font-medium">
+    <td className="border-r">${tableData?.patientID}</td>
+    <td className="border-r">${tableData?.name}</td>
+    <td className="border-r">${formattedDate}</td>
+    <td className="border-r">${tableData?.study}</td>
+  </tr>
+</tbody>
+<thead className="border-b font-medium">
+  <tr>
+    <th
+      scope="col"
+      className="border-r"
+    >
+      Gender
+    </th>
+    <th
+      scope="col"
+      className="border-r"
+    >
+      Modality
+    </th>
+    <th
+      scope="col"
+      className="border-r"
+    >
+      Age
+    </th>
+    <th
+      scope="col"
+      className="border-r"
+    >
+      Ref Doctor
+    </th>
+  </tr>
+</thead>
+<tbody>
+  <tr className="border-b font-medium">
+    <td className="border-r">${tableData?.PatientSex}</td>
+    <td className="border-r">${tableData?.modality}</td>
+    <td className="border-r">${tableData?.PatientAge}</td>
+    <td className="border-r">${tableData?.ReferringPhysicianName}</td>
+  </tr>
+</tbody>
+</table>`;
+
+  // const handleDownloadDocx = async () => {
+  //   const fullContent = pageContent || pageContent.level.content;
+  //   const docx = await htmlToDocx(
+  //     table + fullContent + drText1 + drText2 + drText3 + drText4 + drText5 + drText6 + drText7  + drDetails
+  //   );
+  //   saveAs(docx, 'report.docx');
+  // };
+
+
   const handleDownloadDocx = async () => {
-    const fullContent = pageContent || pageContent.level.content;
-    const table = ` <table className="text-dark mb-3 min-w-full whitespace-nowrap border text-center text-sm font-light">
-    <thead className="border-b font-medium">
-      <tr>
-        <th
-          scope="col"
-          className="border-r"
-        >
-          Patient ID
-        </th>
-        <th
-          scope="col"
-          className="border-r"
-        >
-          Patient Name
-        </th>
-        <th
-          scope="col"
-          className="border-r"
-        >
-          Date
-        </th>
-        <th
-          scope="col"
-          className="border-r"
-        >
-          Study
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr className="border-b font-medium">
-        <td className="border-r">${tableData?.patientID}</td>
-        <td className="border-r">${tableData?.name}</td>
-        <td className="border-r">${formattedDate}</td>
-        <td className="border-r">${tableData?.study}</td>
-      </tr>
-    </tbody>
-    <thead className="border-b font-medium">
-      <tr>
-        <th
-          scope="col"
-          className="border-r"
-        >
-          Gender
-        </th>
-        <th
-          scope="col"
-          className="border-r"
-        >
-          Modality
-        </th>
-        <th
-          scope="col"
-          className="border-r"
-        >
-          Age
-        </th>
-        <th
-          scope="col"
-          className="border-r"
-        >
-          Ref Doctor
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr className="border-b font-medium">
-        <td className="border-r">${tableData?.PatientSex}</td>
-        <td className="border-r">${tableData?.modality}</td>
-        <td className="border-r">${tableData?.PatientAge}</td>
-        <td className="border-r">${tableData?.ReferringPhysicianName}</td>
-      </tr>
-    </tbody>
-  </table>`;
+    const fullContent =
+      pageContent && pageContent.level && pageContent.level.content !== undefined
+        ? pageContent.level.content
+        : pageContent;
     const docx = await htmlToDocx(
-      table + fullContent + drText1 + drText2 + drText3 + drText4 + drText5 + drText6 + drText7 + imgDr + drDetails
+      table + fullContent + drText1 + drText2 + drText3 + drText4 + drText5 + drText6 + drText7  + drDetails
     );
     saveAs(docx, 'report.docx');
   };
