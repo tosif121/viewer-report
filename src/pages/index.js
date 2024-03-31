@@ -14,7 +14,7 @@ export default function App() {
   const path = router.asPath.replace(/^\/#/, '');
   const [reports, setReports] = useState([]);
   // const urlParams = new URLSearchParams(url.split('?')[1]);
-  const User = "Shiv";
+  const User = 'Shiv';
 
   useEffect(() => {
     function handleResponse(responseData) {
@@ -134,7 +134,7 @@ ${tableData?.mlcdrName?.compony}`
 MD (Radio-Diagnosis)
 ${tableData?.drName?.compony}`;
 
-const table = ` <table className="text-dark mb-3 min-w-full whitespace-nowrap border text-center text-sm font-light">
+  const table = ` <table className="text-dark mb-3 min-w-full whitespace-nowrap border text-center text-sm font-light">
 <thead className="border-b font-medium">
   <tr>
     <th
@@ -209,24 +209,65 @@ const table = ` <table className="text-dark mb-3 min-w-full whitespace-nowrap bo
 </tbody>
 </table>`;
 
-  // const handleDownloadDocx = async () => {
-  //   const fullContent = pageContent || pageContent.level.content;
-  //   const docx = await htmlToDocx(
-  //     table + fullContent + drText1 + drText2 + drText3 + drText4 + drText5 + drText6 + drText7  + drDetails
-  //   );
-  //   saveAs(docx, 'report.docx');
-  // };
-
+  const urlToBase64 = async (url) => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
 
   const handleDownloadDocx = async () => {
     const fullContent =
       pageContent && pageContent.level && pageContent.level.content !== undefined
         ? pageContent.level.content
         : pageContent;
-    const docx = await htmlToDocx(
-      table + fullContent + drText1 + drText2 + drText3 + drText4 + drText5 + drText6 + drText7  + drDetails
-    );
-    saveAs(docx, 'report.docx');
+
+    const imgDr =
+      tableData?.mlc === true ? tableData?.mlcsignUrl : User === 'DrJay' ? tableData?.signUrldr1 : tableData?.signUrl;
+
+    // Function to convert an image URL to base64
+    const urlToBase64 = async (url) => {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    };
+
+    try {
+      // Convert image URL to base64
+      const imgBase64 = await urlToBase64(imgDr);
+
+      // Construct HTML content including the image
+      const htmlContent = `
+        ${table}
+        ${fullContent}
+        ${drText1}
+        ${drText2}
+        ${drText3}
+        ${drText4}
+        ${drText5}
+        ${drText6}
+        ${drText7}
+        <img src="${imgBase64}" alt="Medical Image" />
+        ${drDetails}
+      `;
+
+      // Convert HTML to DOCX
+      const docx = await htmlToDocx(htmlContent);
+
+      // Save the DOCX file
+      saveAs(docx, 'report.docx');
+    } catch (error) {
+      console.error('Error converting HTML to DOCX:', error);
+    }
   };
 
   return (
