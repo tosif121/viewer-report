@@ -3,9 +3,9 @@ import { Editor } from '@tinymce/tinymce-react';
 import moment from 'moment';
 import { getDataFromServer, postDatatoServer } from '@/utils/services';
 import { useRouter } from 'next/router';
-import { saveAs } from 'file-saver';
 import htmlToDocx from 'html-to-docx';
 import dynamic from 'next/dynamic';
+import axios from 'axios';
 
 const ViewReport = dynamic(import('./ViewReport'));
 
@@ -16,10 +16,12 @@ export default function Report() {
   const [showReport, setShowReport] = useState(false);
   const [viewData, setViewData] = useState(null);
   const router = useRouter();
-  const path = router.asPath.replace(/^\/#/, '');
   const [reports, setReports] = useState([]);
-  // const urlParams = new URLSearchParams(url.split('?')[1]);
-  const User = 'Shiv';
+
+  const queryString = router.asPath.split('#')[1];
+  const params = new URLSearchParams(queryString);
+  const studyInstanceUIDs = params.get('StudyInstanceUIDs');
+  const user = params.get('UserName');
 
   useEffect(() => {
     document.body.addEventListener('click', handleBodyClick);
@@ -67,7 +69,7 @@ export default function Report() {
     }
     const endpoint = 'StudyID';
     const requestBody = {
-      StudyInstanceUID: path,
+      StudyInstanceUID: studyInstanceUIDs,
     };
 
     const props = {
@@ -138,7 +140,7 @@ export default function Report() {
       alt="Medical Image"
     />
   `
-      : User === 'DrJay'
+      : user === 'DrJay'
       ? `
     <img
       src="${tableData?.signUrldr1}"
@@ -199,14 +201,14 @@ ${tableData?.drName?.compony}
     </tbody>
   </table>`;
 
-  const handleDownloadDocx = async () => {
+  const handleSave = async () => {
     const fullContent =
       pageContent && pageContent.level && pageContent.level.content !== undefined
         ? pageContent.level.content
         : pageContent;
 
     const imgDr =
-      tableData?.mlc === true ? tableData?.mlcsignUrl : User === 'DrJay' ? tableData?.signUrldr1 : tableData?.signUrl;
+      tableData?.mlc === true ? tableData?.mlcsignUrl : user === 'DrJay' ? tableData?.signUrldr1 : tableData?.signUrl;
 
     // Function to convert an image URL to base64
     const urlToBase64 = async (url) => {
@@ -226,24 +228,50 @@ ${tableData?.drName?.compony}
 
       // Construct HTML content including the image
       const htmlContent = `
-        ${table}
-        ${fullContent}
-        ${drText1}
-        ${drText2}
-        ${drText3}
-        ${drText4}
-        ${drText5}
-        ${drText6}
-        ${drText7}
-        <img src="${imgBase64}" alt="Medical Image" />
-        ${drDetails}
+      ${table}
+      ${fullContent}
+      ${drText1}
+      ${drText2}
+      ${drText3}
+      ${drText4}
+      ${drText5}
+      ${drText6}
+      ${drText7}
+      <img src="${imgBase64}" alt="Medical Image" />
+      ${drDetails}
       `;
 
       // Convert HTML to DOCX
+      const selectedReport = reports.filter((report) => report.templateID === parseInt(selectedItem));
       const docx = await htmlToDocx(htmlContent);
+      const formData = new FormData();
+      const reportName = selectedReport[0]?.name.replace(/ /g, '_');
+      const fileName = `${reportName}.docx`;
+
+      formData.append('file', docx, fileName);
+      const endPoint = 'http://supravitest.iotcom.io:5500/upload/report';
+      // const endPoint = 'http://volente2.iotcom.io/upload/report';
+
+      try {
+        const responseImage = await axios.post(`${endPoint}/?id=${tableData?.id}&user=${user}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        if (responseImage.data) {
+          console.log('File uploaded successfully');
+          alert('File uploaded successfully');
+        } else {
+          console.error('File upload failed');
+          alert('File uploaded failed');
+        }
+      } catch (error) {
+        console.error('Error during file upload:', error);
+        alert('File upload failed');
+      }
 
       // Save the DOCX file
-      saveAs(docx, 'report.docx');
+      // saveAs(docx, fileName);
     } catch (error) {
       console.error('Error converting HTML to DOCX:', error);
     }
@@ -343,16 +371,7 @@ ${tableData?.drName?.compony}
               ))}
             </select>
           </div>
-          <button
-            type="button"
-            className={`${
-              (selectedItem && 'bg-white hover:bg-gray-100') || 'bg-gray-200'
-            } cursor-pointer text-gray-900 border border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2`}
-            disabled={!selectedItem}
-            onClick={handleDownloadDocx}
-          >
-            Download Report
-          </button>
+
           <button
             type="button"
             className={`${
@@ -362,6 +381,16 @@ ${tableData?.drName?.compony}
             onClick={handleShowReport}
           >
             View Report
+          </button>
+          <button
+            type="button"
+            className={`${
+              (selectedItem && 'bg-white hover:bg-gray-100') || 'bg-gray-200'
+            } cursor-pointer text-gray-900 border border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2`}
+            disabled={!selectedItem}
+            onClick={handleSave}
+          >
+            Save Report
           </button>
         </div>
         {tableReport()}

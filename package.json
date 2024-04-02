@@ -12,8 +12,6 @@
   "dependencies": {
     "@tinymce/tinymce-react": "^4.3.2",
     "axios": "^1.6.8",
-    "docx": "^8.5.0",
-    "docxtemplater": "^3.46.1",
     "file-saver": "^2.0.5",
     "html-docx-js": "^0.3.1",
     "html-to-docx": "^1.8.0",
@@ -21,7 +19,6 @@
     "moment": "^2.30.1",
     "next": "14.1.0",
     "npm": "^10.5.0",
-    "officegen": "^0.6.5",
     "react": "^18",
     "react-dom": "^18"
   },
